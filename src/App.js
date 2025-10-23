@@ -1,24 +1,48 @@
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import Drivers from './components/Drivers';
+import Vehicles from './components/Vehicles';
+import Profile from './components/Profile';
 import './App.css';
+import './components/Drivers.css';
+import './components/Vehicles.css';
+import './components/Profile.css';
+import './components/AddDriver.css';
+import './components/DriverDetails.css';
+import './components/DocumentViewer.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <header className="app-header">
+          <h1>Driver Management App</h1>
+        </header>
+        
+        <nav className="bottom-nav">
+          <Link to="/" className="nav-item">
+            <span className="nav-icon">👥</span>
+            <span className="nav-label">Drivers</span>
+          </Link>
+          <Link to="/vehicles" className="nav-item">
+            <span className="nav-icon">🚗</span>
+            <span className="nav-label">Vehicles</span>
+          </Link>
+          <Link to="/profile" className="nav-item">
+            <span className="nav-icon">👤</span>
+            <span className="nav-label">Profile</span>
+          </Link>
+        </nav>
+
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<Drivers />} />
+            <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 
