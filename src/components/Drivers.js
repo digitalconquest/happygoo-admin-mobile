@@ -5,44 +5,7 @@ import './Drivers.css';
 
 const Drivers = () => {
   // Default sample drivers
-  const defaultDrivers = [
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'john.smith@email.com',
-      phone: '+91 9902456789',
-      license: 'DL-123456789',
-      status: 'active',
-      experience: '5 years'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      phone: '+91 7975907878',
-      license: 'DL-987654321',
-      status: 'active',
-      experience: '3 years'
-    },
-    {
-      id: 3,
-      name: 'Mike Wilson',
-      email: 'mike.wilson@email.com',
-      phone: '+91 9908765432',
-      license: 'DL-456789123',
-      status: 'inactive',
-      experience: '7 years'
-    },
-    {
-      id: 4,
-      name: 'Emily Davis',
-      email: 'emily.davis@email.com',
-      phone: '+91 9907897868',
-      license: 'DL-789123456',
-      status: 'active',
-      experience: '2 years'
-    }
-  ];
+  const defaultDrivers = [];
 
   const [drivers, setDrivers] = useState([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -55,18 +18,63 @@ const Drivers = () => {
   useEffect(() => {
     const loadDrivers = () => {
       try {
+        // First, try to load from the main 'drivers' array
         const savedDrivers = localStorage.getItem('drivers');
+        let allDrivers = [];
+        
         if (savedDrivers) {
           const parsedDrivers = JSON.parse(savedDrivers);
-          setDrivers(parsedDrivers);
+          allDrivers = [...parsedDrivers];
+          console.log('Loading drivers from main array:', parsedDrivers.length);
+        }
+        
+        // Also check for individual driver entries (driver_*)
+        const individualDrivers = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('driver_') && key !== 'drivers') {
+            try {
+              const driverData = JSON.parse(localStorage.getItem(key));
+              if (driverData && driverData.id) {
+                individualDrivers.push(driverData);
+              }
+            } catch (error) {
+              console.error(`Error parsing driver data for key ${key}:`, error);
+            }
+          }
+        }
+        
+        console.log('Found individual drivers:', individualDrivers.length);
+        
+        // Merge all drivers and remove duplicates
+        const mergedDrivers = [...allDrivers];
+        individualDrivers.forEach(individualDriver => {
+          const exists = mergedDrivers.some(driver => driver.id === individualDriver.id);
+          if (!exists) {
+            mergedDrivers.push(individualDriver);
+          }
+        });
+        
+        if (mergedDrivers.length > 0) {
+          console.log('Total drivers loaded:', mergedDrivers.length);
+          setDrivers(mergedDrivers);
+          // Update the main drivers array with all drivers
+          localStorage.setItem('drivers', JSON.stringify(mergedDrivers));
         } else {
-          // If no saved drivers, use default drivers and save them
+          console.log('No drivers found, using defaults');
           setDrivers(defaultDrivers);
           localStorage.setItem('drivers', JSON.stringify(defaultDrivers));
         }
       } catch (error) {
         console.error('Error loading drivers from localStorage:', error);
+        console.log('Falling back to default drivers');
         setDrivers(defaultDrivers);
+        // Try to save defaults to localStorage
+        try {
+          localStorage.setItem('drivers', JSON.stringify(defaultDrivers));
+        } catch (saveError) {
+          console.error('Error saving default drivers to localStorage:', saveError);
+        }
       }
     };
 
@@ -76,21 +84,30 @@ const Drivers = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const handleAddDriver = (driver) => {
-    console.log('Adding new driver:', driver);
+    console.log('Adding new driver to UI:', driver);
     console.log('Current drivers before adding:', drivers);
     
+    // Update the UI state
     const updatedDrivers = [...drivers, driver];
     console.log('Updated drivers list:', updatedDrivers);
     
     setDrivers(updatedDrivers);
     
-    // Update localStorage with the new driver list
+    // Verify localStorage is already updated (should be done in AddDriver component)
     try {
-      localStorage.setItem('drivers', JSON.stringify(updatedDrivers));
-      console.log('Driver saved to localStorage:', driver);
+      const savedDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
+      console.log('Drivers in localStorage after add:', savedDrivers.length);
+      
+      // If localStorage doesn't match, update it
+      if (savedDrivers.length !== updatedDrivers.length) {
+        console.log('⚠️ localStorage mismatch detected, updating...');
+        localStorage.setItem('drivers', JSON.stringify(updatedDrivers));
+      }
+      
+      console.log('✅ Driver successfully added to UI');
       console.log('Total drivers now:', updatedDrivers.length);
     } catch (error) {
-      console.error('Error saving driver to localStorage:', error);
+      console.error('Error verifying localStorage:', error);
     }
     
     // Show success message
@@ -183,6 +200,45 @@ const Drivers = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  // Utility function to debug localStorage
+  const debugLocalStorage = () => {
+    try {
+      const drivers = JSON.parse(localStorage.getItem('drivers') || '[]');
+      console.log('🔍 localStorage Debug:');
+      console.log('- Total drivers in localStorage:', drivers.length);
+      console.log('- Driver IDs:', drivers.map(d => d.id));
+      console.log('- Driver names:', drivers.map(d => d.name));
+      return drivers;
+    } catch (error) {
+      console.error('❌ Error reading localStorage:', error);
+      return [];
+    }
+  };
+
+  // Function to remove Emily driver
+  const removeEmilyDriver = () => {
+    try {
+      // Get current drivers
+      const currentDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
+      
+      // Filter out Emily driver
+      const driversWithoutEmily = currentDrivers.filter(driver => 
+        !driver.name.toLowerCase().includes('emily')
+      );
+      
+      // Update localStorage
+      localStorage.setItem('drivers', JSON.stringify(driversWithoutEmily));
+      
+      // Update the UI
+      setDrivers(driversWithoutEmily);
+      
+      console.log('✅ Emily driver removed from localStorage');
+      console.log('Drivers remaining:', driversWithoutEmily.length);
+    } catch (error) {
+      console.error('❌ Error removing Emily driver:', error);
+    }
+  };
+
   return (
     <div className="drivers-container">
       <div className="page-container">
@@ -195,7 +251,6 @@ const Drivers = () => {
           >
             {showAddForm ? 'Cancel' : '+ Add Driver'}
           </button>
-          
         </div>
 
         {showSuccessMessage && (
@@ -244,7 +299,9 @@ const Drivers = () => {
                     <p>🆔 License: {driver.license}</p>
                     <p>⏰ Experience: {driver.experience}</p>
                     <span className={`driver-status status-${driver.status}`}>
-                      {driver.status === 'active' ? 'Active' : 'Inactive'}
+                      {driver.status === 'pending' ? 'Pending' : 
+                       driver.status === 'approved' ? 'Approved' : 
+                       driver.status === 'rejected' ? 'Rejected' : driver.status}
                     </span>
                   </div>
                 </div>

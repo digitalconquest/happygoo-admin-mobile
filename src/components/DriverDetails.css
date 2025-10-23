@@ -141,12 +141,17 @@
   margin-top: 8px;
 }
 
-.status-active {
+.status-pending {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-approved {
   background-color: #e8f5e8;
   color: #2e7d32;
 }
 
-.status-inactive {
+.status-rejected {
   background-color: #ffebee;
   color: #c62828;
 }
@@ -194,12 +199,77 @@
   font-weight: 600;
 }
 
-.status-text.status-active {
+.status-text.status-pending {
+  color: #f57c00;
+}
+
+.status-text.status-approved {
   color: #2e7d32;
 }
 
-.status-text.status-inactive {
+.status-text.status-rejected {
   color: #c62828;
+}
+
+/* Status Change Functionality */
+.status-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.change-status-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.change-status-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.status-dropdown {
+  margin-top: 8px;
+}
+
+.status-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  background: white;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.status-select:hover {
+  border-color: #dee2e6;
 }
 
 .documents-list {
@@ -341,32 +411,42 @@
 }
 
 .edit-driver-btn {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 12px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .edit-driver-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
 }
 
 .delete-driver-btn {
   background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 12px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .delete-driver-btn:hover {
@@ -375,15 +455,20 @@
 }
 
 .close-details-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 12px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-details-btn:hover {
@@ -444,13 +529,21 @@
   .edit-driver-btn,
   .delete-driver-btn,
   .close-details-btn {
-    width: 100%;
-    padding: 12px 20px;
+    min-width: 35px;
+    height: 35px;
+    padding: 8px 10px;
+    font-size: 16px;
   }
   
   .document-buttons {
     flex-direction: column;
     gap: 4px;
+  }
+  
+  .status-select {
+    font-size: 16px;
+    padding: 12px 16px;
+    padding-right: 45px;
   }
   
   .view-document-btn,

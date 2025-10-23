@@ -62,7 +62,7 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
         phone: newDriver.phone,
         email: `${newDriver.name.toLowerCase().replace(' ', '.')}@email.com`,
         license: `DL-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        status: 'active',
+        status: 'pending',
         experience: 'New Driver',
         vehicleType: newDriver.vehicleType,
         vehicleNumber: newDriver.vehicleNumber,
@@ -107,33 +107,48 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
         createdAt: new Date().toISOString()
       };
 
-      // Save to localStorage
-      const existingDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
-      let updatedDrivers;
-      
-      if (editMode) {
-        // Update existing driver
-        updatedDrivers = existingDrivers.map(d => d.id === driver.id ? driver : d);
-      } else {
-        // Add new driver
-        updatedDrivers = [...existingDrivers, driver];
+      // Save to localStorage with error handling
+      try {
+        const existingDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
+        let updatedDrivers;
+        
+        if (editMode) {
+          // Update existing driver
+          updatedDrivers = existingDrivers.map(d => d.id === driver.id ? driver : d);
+        } else {
+          // Add new driver
+          updatedDrivers = [...existingDrivers, driver];
+        }
+        
+        // Save to localStorage with error handling
+        localStorage.setItem('drivers', JSON.stringify(updatedDrivers));
+        
+        // Also save individual driver data for backup
+        localStorage.setItem(`driver_${driver.id}`, JSON.stringify(driver));
+        
+        // Debug: Log document storage
+        console.log('Driver saved with documents:', driver.documents);
+        console.log('Total drivers in localStorage:', updatedDrivers.length);
+        
+        // Verify the save was successful
+        const savedDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
+        const savedDriver = JSON.parse(localStorage.getItem(`driver_${driver.id}`) || '{}');
+        
+        if (savedDrivers.length === updatedDrivers.length && savedDriver.id === driver.id) {
+          console.log('✅ Driver successfully saved to localStorage');
+          console.log('Verification - saved driver documents:', savedDriver.documents);
+        } else {
+          console.error('❌ Driver save verification failed');
+        }
+        
+        // Call the parent component to update the UI
+        onAddDriver(driver);
+        onClose();
+        
+      } catch (error) {
+        console.error('Error saving driver to localStorage:', error);
+        alert('Error saving driver. Please try again.');
       }
-      
-      localStorage.setItem('drivers', JSON.stringify(updatedDrivers));
-
-      // Also save individual driver data
-      localStorage.setItem(`driver_${driver.id}`, JSON.stringify(driver));
-      
-      // Debug: Log document storage
-      console.log('Driver saved with documents:', driver.documents);
-      console.log('Total drivers in localStorage:', updatedDrivers.length);
-      
-      // Verify documents are stored correctly
-      const savedDriver = JSON.parse(localStorage.getItem(`driver_${driver.id}`));
-      console.log('Verification - saved driver documents:', savedDriver.documents);
-
-      onAddDriver(driver);
-      onClose();
     }
   };
 

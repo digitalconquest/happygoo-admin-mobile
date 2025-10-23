@@ -5,6 +5,7 @@ import './DriverDetails.css';
 const DriverDetails = ({ driver, onClose, onEdit, onDelete }) => {
   const [editingDocument, setEditingDocument] = useState(null);
   const [viewingDocument, setViewingDocument] = useState(null);
+  const [showStatusChange, setShowStatusChange] = useState(false);
 
   if (!driver) return null;
 
@@ -24,6 +25,19 @@ const DriverDetails = ({ driver, onClose, onEdit, onDelete }) => {
         onDelete(driver.id);
       }
     }
+  };
+
+  const handleStatusChange = (newStatus) => {
+    const updatedDriver = {
+      ...driver,
+      status: newStatus
+    };
+    
+    if (onEdit) {
+      onEdit(updatedDriver);
+    }
+    
+    setShowStatusChange(false);
   };
 
   const handleDocumentEdit = (documentType) => {
@@ -142,7 +156,9 @@ const DriverDetails = ({ driver, onClose, onEdit, onDelete }) => {
               <p className="driver-email">{driver.email}</p>
               <p className="driver-phone">{driver.phone}</p>
               <span className={`status-badge status-${driver.status}`}>
-                {driver.status === 'active' ? 'Active' : 'Inactive'}
+                {driver.status === 'pending' ? 'Pending' : 
+                 driver.status === 'approved' ? 'Approved' : 
+                 driver.status === 'rejected' ? 'Rejected' : driver.status}
               </span>
             </div>
           </div>
@@ -181,9 +197,33 @@ const DriverDetails = ({ driver, onClose, onEdit, onDelete }) => {
               </div>
               <div className="detail-item">
                 <label>Status</label>
-                <span className={`status-text status-${driver.status}`}>
-                  {driver.status === 'active' ? 'Active' : 'Inactive'}
-                </span>
+                <div className="status-container">
+                  <span className={`status-text status-${driver.status}`}>
+                    {driver.status === 'pending' ? 'Pending' : 
+                     driver.status === 'approved' ? 'Approved' : 
+                     driver.status === 'rejected' ? 'Rejected' : driver.status}
+                  </span>
+                  <button 
+                    className="change-status-btn" 
+                    onClick={() => setShowStatusChange(!showStatusChange)}
+                    title="Change Status"
+                  >
+                    🔄
+                  </button>
+                </div>
+                {showStatusChange && (
+                  <div className="status-dropdown">
+                    <select 
+                      value={driver.status} 
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className="status-select"
+                    >
+                      <option value="pending">⏳ Pending</option>
+                      <option value="approved">✅ Approved</option>
+                      <option value="rejected">❌ Rejected</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -305,14 +345,14 @@ const DriverDetails = ({ driver, onClose, onEdit, onDelete }) => {
 
         <div className="modal-footer">
           <div className="footer-buttons">
-            <button className="edit-driver-btn" onClick={handleEditDriver}>
-              ✏️ Edit Driver
+            <button className="edit-driver-btn" onClick={handleEditDriver} title="Edit Driver">
+              ✏️
             </button>
-            <button className="delete-driver-btn" onClick={handleDeleteDriver}>
-              🗑️ Delete Driver
+            <button className="delete-driver-btn" onClick={handleDeleteDriver} title="Delete Driver">
+              🗑️
             </button>
-            <button className="close-details-btn" onClick={onClose}>
-              Close
+            <button className="close-details-btn" onClick={onClose} title="Close">
+              ✕
             </button>
           </div>
         </div>
