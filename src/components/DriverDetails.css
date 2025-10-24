@@ -329,12 +329,17 @@
   background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 8px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .view-document-btn:hover {
@@ -346,12 +351,17 @@
   background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 8px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .edit-document-btn:hover {

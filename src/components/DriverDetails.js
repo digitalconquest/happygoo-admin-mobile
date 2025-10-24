@@ -306,14 +306,15 @@ const DriverDetails = ({ driver, onClose, onEdit, onDelete }) => {
                             onClick={() => handleViewDocument(key, value)}
                             title={`View ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}`}
                           >
-                            👁️ View
+                            👁️
                           </button>
                         )}
                         <button 
                           className="edit-document-btn"
                           onClick={() => handleDocumentEdit(key)}
+                          title={`Edit ${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}`}
                         >
-                          📝 Edit
+                          📝
                         </button>
                       </div>
                     )}
