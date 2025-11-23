@@ -1,159 +1,121 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AddDriver.css';
 
 const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [otpTimer, setOtpTimer] = useState(0);
-  const [newDriver, setNewDriver] = useState(() => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Initialize driver data structure matching server model
+  const [driverData, setDriverData] = useState(() => {
     if (editMode && driverToEdit) {
       return {
-        // Personal Details
         name: driverToEdit.name || '',
         phone: driverToEdit.phone || '',
-        otp: '',
+        email: driverToEdit.email || '',
         dob: driverToEdit.dob || '',
         gender: driverToEdit.gender || '',
-        // Emergency Contact
-        emergencyName: driverToEdit.emergencyName || '',
-        emergencyRelationship: driverToEdit.emergencyRelationship || '',
-        emergencyPhone: driverToEdit.emergencyPhone || '',
-        // Vehicle Details
-        vehicleType: driverToEdit.vehicleType || '',
-        vehicleNumber: driverToEdit.vehicleNumber || '',
-        // Documents
-        aadharCard: driverToEdit.documents?.aadharCard || null,
-        panCard: driverToEdit.documents?.panCard || null,
-        driverLicense: driverToEdit.documents?.driverLicense || null,
-        rcVehicle: driverToEdit.documents?.rcVehicle || null,
-        insuranceVehicle: driverToEdit.documents?.insuranceVehicle || null
+        experience_yrs: driverToEdit.experience_yrs || '',
+        emergency_contact: {
+          name: driverToEdit.emergency_contact?.name || '',
+          phone: driverToEdit.emergency_contact?.phone || '',
+          relationship: driverToEdit.emergency_contact?.relationship || ''
+        },
+        vehicle: {
+          type: driverToEdit.vehicle?.type || '',
+          model_name: driverToEdit.vehicle?.model_name || '',
+          number: driverToEdit.vehicle?.number || ''
+        },
+        documents: {
+          aadhar_url: driverToEdit.documents?.aadhar_url || null,
+          pan_url: driverToEdit.documents?.pan_url || null,
+          driver_license_url: driverToEdit.documents?.driver_license_url || null,
+          rc_vehicle_url: driverToEdit.documents?.rc_vehicle_url || null,
+          insurance_vehicle_url: driverToEdit.documents?.insurance_vehicle_url || null
+        }
       };
     }
+    // Try to load from localStorage first
+    const savedData = localStorage.getItem('driver_draft');
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (e) {
+        console.error('Error parsing saved driver data:', e);
+      }
+    }
+    // Default empty structure
     return {
-      // Personal Details
       name: '',
       phone: '',
-      otp: '',
+      email: '',
       dob: '',
       gender: '',
-      // Emergency Contact
-      emergencyName: '',
-      emergencyRelationship: '',
-      emergencyPhone: '',
-      // Vehicle Details
-      vehicleType: '',
-      vehicleNumber: '',
-      // Documents
-      aadharCard: null,
-      panCard: null,
-      driverLicense: null,
-      rcVehicle: null,
-      insuranceVehicle: null
+      experience_yrs: '',
+      emergency_contact: {
+        name: '',
+        phone: '',
+        relationship: ''
+      },
+      vehicle: {
+        type: '',
+        model_name: '',
+        number: ''
+      },
+      documents: {
+        aadhar_url: null,
+        pan_url: null,
+        driver_license_url: null,
+        rc_vehicle_url: null,
+        insurance_vehicle_url: null
+      }
     };
   });
 
-  const handleAddDriver = () => {
-    if (newDriver.name && newDriver.phone && newDriver.vehicleType && newDriver.vehicleNumber) {
-      const driver = {
-        id: editMode ? driverToEdit.id : Date.now(), // Keep existing ID in edit mode
-        name: newDriver.name,
-        phone: newDriver.phone,
-        email: `${newDriver.name.toLowerCase().replace(' ', '.')}@email.com`,
-        license: `DL-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        status: 'pending',
-        experience: 'New Driver',
-        vehicleType: newDriver.vehicleType,
-        vehicleNumber: newDriver.vehicleNumber,
-        dob: newDriver.dob,
-        gender: newDriver.gender,
-        emergencyName: newDriver.emergencyName,
-        emergencyRelationship: newDriver.emergencyRelationship,
-        emergencyPhone: newDriver.emergencyPhone,
-        // Document uploads with base64 data for persistence
-        documents: {
-          aadharCard: newDriver.aadharCard ? {
-            name: newDriver.aadharCard.name,
-            data: newDriver.aadharCard.data,
-            type: newDriver.aadharCard.type,
-            size: newDriver.aadharCard.size
-          } : null,
-          panCard: newDriver.panCard ? {
-            name: newDriver.panCard.name,
-            data: newDriver.panCard.data,
-            type: newDriver.panCard.type,
-            size: newDriver.panCard.size
-          } : null,
-          driverLicense: newDriver.driverLicense ? {
-            name: newDriver.driverLicense.name,
-            data: newDriver.driverLicense.data,
-            type: newDriver.driverLicense.type,
-            size: newDriver.driverLicense.size
-          } : null,
-          rcVehicle: newDriver.rcVehicle ? {
-            name: newDriver.rcVehicle.name,
-            data: newDriver.rcVehicle.data,
-            type: newDriver.rcVehicle.type,
-            size: newDriver.rcVehicle.size
-          } : null,
-          insuranceVehicle: newDriver.insuranceVehicle ? {
-            name: newDriver.insuranceVehicle.name,
-            data: newDriver.insuranceVehicle.data,
-            type: newDriver.insuranceVehicle.type,
-            size: newDriver.insuranceVehicle.size
-          } : null
-        },
-        createdAt: new Date().toISOString()
-      };
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    if (!editMode) {
+      localStorage.setItem('driver_draft', JSON.stringify(driverData));
+    }
+  }, [driverData, editMode]);
 
-      // Save to localStorage with error handling
-      try {
-        const existingDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
-        let updatedDrivers;
-        
-        if (editMode) {
-          // Update existing driver
-          updatedDrivers = existingDrivers.map(d => d.id === driver.id ? driver : d);
-        } else {
-          // Add new driver
-          updatedDrivers = [...existingDrivers, driver];
+  const updateDriverData = (field, value) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setDriverData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
         }
-        
-        // Save to localStorage with error handling
-        localStorage.setItem('drivers', JSON.stringify(updatedDrivers));
-        
-        // Also save individual driver data for backup
-        localStorage.setItem(`driver_${driver.id}`, JSON.stringify(driver));
-        
-        // Debug: Log document storage
-        console.log('Driver saved with documents:', driver.documents);
-        console.log('Total drivers in localStorage:', updatedDrivers.length);
-        
-        // Verify the save was successful
-        const savedDrivers = JSON.parse(localStorage.getItem('drivers') || '[]');
-        const savedDriver = JSON.parse(localStorage.getItem(`driver_${driver.id}`) || '{}');
-        
-        if (savedDrivers.length === updatedDrivers.length && savedDriver.id === driver.id) {
-          console.log('✅ Driver successfully saved to localStorage');
-          console.log('Verification - saved driver documents:', savedDriver.documents);
-        } else {
-          console.error('❌ Driver save verification failed');
-        }
-        
-        // Call the parent component to update the UI
-        onAddDriver(driver);
-        onClose();
-        
-      } catch (error) {
-        console.error('Error saving driver to localStorage:', error);
-        alert('Error saving driver. Please try again.');
-      }
+      }));
+    } else {
+      setDriverData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  const handleFileUpload = (field, file) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // Store as data URL (base64) - in production, this would be uploaded to server and URL stored
+        updateDriverData(`documents.${field}`, e.target.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      if (!driverData.name || !driverData.phone) {
+        alert('Name and phone number are required');
+        return;
+      }
+    }
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -164,114 +126,87 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
     }
   };
 
-  const handleFileUpload = (field, file) => {
-    if (file) {
-      console.log(`Uploading ${field}:`, file.name, file.type, file.size);
-      // Convert file to base64 for persistent storage
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const fileData = {
-          name: file.name,
-          data: e.target.result, // Base64 data for persistence
-          type: file.type,
-          size: file.size
-        };
-        console.log(`File converted to base64 for ${field}:`, fileData.name);
-        setNewDriver({
-          ...newDriver, 
-          [field]: fileData
-        });
+  const handleSubmit = async () => {
+    // Validate required fields
+    if (!driverData.name || !driverData.phone) {
+      alert('Name and phone number are required');
+      return;
+    }
+
+    if (!driverData.vehicle.type) {
+      alert('Vehicle type is required');
+      return;
+    }
+
+    // Validate required documents
+    if (!driverData.documents.aadhar_url || !driverData.documents.pan_url || !driverData.documents.driver_license_url) {
+      alert('Aadhar Card, PAN Card, and Driver License are required documents');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare data for API
+      const submitData = {
+        name: driverData.name,
+        phone: driverData.phone,
+        email: driverData.email || undefined,
+        dob: driverData.dob || undefined,
+        gender: driverData.gender || undefined,
+        experience_yrs: driverData.experience_yrs ? parseInt(driverData.experience_yrs) : undefined,
+        emergency_contact: {
+          name: driverData.emergency_contact.name || undefined,
+          phone: driverData.emergency_contact.phone || undefined,
+          relationship: driverData.emergency_contact.relationship || undefined
+        },
+        vehicle: {
+          type: driverData.vehicle.type,
+          model_name: driverData.vehicle.model_name || undefined,
+          number: driverData.vehicle.number || undefined
+        },
+        documents: {
+          aadhar_url: driverData.documents.aadhar_url,
+          pan_url: driverData.documents.pan_url,
+          driver_license_url: driverData.documents.driver_license_url,
+          rc_vehicle_url: driverData.documents.rc_vehicle_url || undefined,
+          insurance_vehicle_url: driverData.documents.insurance_vehicle_url || undefined
+        }
       };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  // Generate a random 6-digit OTP
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
-  // Send OTP functionality
-  const handleSendOTP = () => {
-    if (!newDriver.phone) {
-      alert('Please enter a phone number first');
-      return;
-    }
-
-    // Generate OTP
-    const otp = generateOTP();
-    setGeneratedOtp(otp);
-    setOtpSent(true);
-    setOtpVerified(false);
-    
-    // Start timer (60 seconds)
-    setOtpTimer(60);
-    const timer = setInterval(() => {
-      setOtpTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
+      // Make API call
+      const response = await fetch('http://localhost:5000/api/drivers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData)
       });
-    }, 1000);
 
-    // Simulate sending OTP (in real app, this would be an API call)
-    console.log(`OTP sent to ${newDriver.phone}: ${otp}`);
-    
-    // Show success message
-    alert(`OTP sent to ${newDriver.phone}\n\nOTP: ${otp}\n\nNote: In a real application, this would be sent via SMS.`);
-  };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create driver');
+      }
 
-  // Verify OTP functionality
-  const handleVerifyOTP = () => {
-    if (!newDriver.otp) {
-      alert('Please enter the OTP');
-      return;
+      const result = await response.json();
+      
+      // Clear draft from localStorage
+      localStorage.removeItem('driver_draft');
+      
+      // Call parent callback
+      onAddDriver(result.data);
+      onClose();
+    } catch (error) {
+      console.error('Error creating driver:', error);
+      alert(`Error creating driver: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (newDriver.otp === generatedOtp) {
-      setOtpVerified(true);
-      alert('OTP verified successfully!');
-    } else {
-      alert('Invalid OTP. Please try again.');
-      setNewDriver({...newDriver, otp: ''});
-    }
-  };
-
-  // Resend OTP functionality
-  const handleResendOTP = () => {
-    if (otpTimer > 0) {
-      alert(`Please wait ${otpTimer} seconds before requesting a new OTP`);
-      return;
-    }
-
-    const otp = generateOTP();
-    setGeneratedOtp(otp);
-    setOtpTimer(60);
-    
-    const timer = setInterval(() => {
-      setOtpTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    console.log(`OTP resent to ${newDriver.phone}: ${otp}`);
-    alert(`OTP resent to ${newDriver.phone}\n\nOTP: ${otp}`);
   };
 
   const handleClose = () => {
-    setCurrentStep(1);
-    setNewDriver({
-      name: '', phone: '', otp: '', dob: '', gender: '',
-      emergencyName: '', emergencyRelationship: '', emergencyPhone: '',
-      vehicleType: '', vehicleNumber: '',
-      aadharCard: null, panCard: null, driverLicense: null, rcVehicle: null, insuranceVehicle: null
-    });
+    // Optionally clear draft on close (or keep it for next time)
+    // localStorage.removeItem('driver_draft');
     onClose();
   };
 
@@ -285,7 +220,7 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
         </div>
 
         <div className="step-indicator">
-          Step {currentStep} of 3
+          Step {currentStep} of 4
         </div>
 
         {/* Step 1: Personal Details */}
@@ -293,85 +228,48 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
           <div className="form-step">
             <h4>Personal Details</h4>
             <div className="form-group">
-              <label>Driver Name *</label>
+              <label>Name *</label>
               <input
                 type="text"
                 placeholder="Enter full name"
-                value={newDriver.name}
-                onChange={(e) => setNewDriver({...newDriver, name: e.target.value})}
+                value={driverData.name}
+                onChange={(e) => updateDriverData('name', e.target.value)}
+                required
               />
             </div>
-                <div className="form-group">
-                  <label>Phone Number *</label>
-                  <div className="phone-input-group">
-                    <input
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={newDriver.phone}
-                      onChange={(e) => setNewDriver({...newDriver, phone: e.target.value})}
-                    />
-                    <button 
-                      className={`otp-btn ${otpSent ? 'otp-sent' : ''}`}
-                      onClick={handleSendOTP}
-                      disabled={otpSent && otpTimer > 0}
-                    >
-                      {otpSent ? `Resend (${otpTimer}s)` : 'Send OTP'}
-                    </button>
-                  </div>
-                  {otpSent && (
-                    <div className="otp-status">
-                      <span className={`status-indicator ${otpVerified ? 'verified' : 'pending'}`}>
-                        {otpVerified ? '✅ Verified' : '⏳ Pending'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="form-group">
-                  <label>Verify OTP</label>
-                  <div className="otp-input-group">
-                    <input
-                      type="text"
-                      placeholder="Enter 6-digit OTP"
-                      value={newDriver.otp}
-                      onChange={(e) => setNewDriver({...newDriver, otp: e.target.value})}
-                      maxLength="6"
-                      disabled={otpVerified}
-                    />
-                    <button 
-                      className="verify-otp-btn"
-                      onClick={handleVerifyOTP}
-                      disabled={otpVerified || !otpSent}
-                    >
-                      {otpVerified ? '✅ Verified' : 'Verify'}
-                    </button>
-                  </div>
-                  {otpSent && !otpVerified && (
-                    <div className="otp-help">
-                      <p>Enter the 6-digit OTP sent to {newDriver.phone}</p>
-                      <button 
-                        className="resend-otp-btn"
-                        onClick={handleResendOTP}
-                        disabled={otpTimer > 0}
-                      >
-                        {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Resend OTP'}
-                      </button>
-                    </div>
-                  )}
-                </div>
+            <div className="form-group">
+              <label>Phone Number *</label>
+              <input
+                type="tel"
+                placeholder="Enter phone number"
+                value={driverData.phone}
+                onChange={(e) => updateDriverData('phone', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Enter email (optional)"
+                value={driverData.email}
+                onChange={(e) => updateDriverData('email', e.target.value)}
+              />
+            </div>
             <div className="form-row">
               <div className="form-group">
                 <label>Date of Birth</label>
                 <input
                   type="date"
-                  value={newDriver.dob}
-                  onChange={(e) => setNewDriver({...newDriver, dob: e.target.value})}
+                  value={driverData.dob}
+                  onChange={(e) => updateDriverData('dob', e.target.value)}
                 />
               </div>
               <div className="form-group">
                 <label>Gender</label>
                 <select
-                  value={newDriver.gender}
-                  onChange={(e) => setNewDriver({...newDriver, gender: e.target.value})}
+                  value={driverData.gender}
+                  onChange={(e) => updateDriverData('gender', e.target.value)}
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -380,32 +278,37 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
                 </select>
               </div>
             </div>
+            <div className="form-group">
+              <label>Experience (Years)</label>
+              <input
+                type="number"
+                placeholder="Enter years of experience"
+                value={driverData.experience_yrs}
+                onChange={(e) => updateDriverData('experience_yrs', e.target.value)}
+                min="0"
+              />
+            </div>
           </div>
         )}
 
-        {/* Step 2: Emergency Contact & Vehicle Details */}
+        {/* Step 2: Emergency Contact */}
         {currentStep === 2 && (
           <div className="form-step">
-            <h4>Emergency Contact & Vehicle Details</h4>
-            
-            {/* Emergency Contact Section */}
-            <div className="section-header">
-              <h5>Emergency Contact</h5>
-            </div>
+            <h4>Emergency Contact</h4>
             <div className="form-group">
-              <label>Reference Name *</label>
+              <label>Contact Name</label>
               <input
                 type="text"
-                placeholder="Enter reference name"
-                value={newDriver.emergencyName}
-                onChange={(e) => setNewDriver({...newDriver, emergencyName: e.target.value})}
+                placeholder="Enter emergency contact name"
+                value={driverData.emergency_contact.name}
+                onChange={(e) => updateDriverData('emergency_contact.name', e.target.value)}
               />
             </div>
             <div className="form-group">
-              <label>Relationship *</label>
+              <label>Relationship</label>
               <select
-                value={newDriver.emergencyRelationship}
-                onChange={(e) => setNewDriver({...newDriver, emergencyRelationship: e.target.value})}
+                value={driverData.emergency_contact.relationship}
+                onChange={(e) => updateDriverData('emergency_contact.relationship', e.target.value)}
               >
                 <option value="">Select Relationship</option>
                 <option value="spouse">Spouse</option>
@@ -416,19 +319,21 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
               </select>
             </div>
             <div className="form-group">
-              <label>Phone Number *</label>
+              <label>Contact Phone</label>
               <input
                 type="tel"
-                placeholder="Enter emergency contact number"
-                value={newDriver.emergencyPhone}
-                onChange={(e) => setNewDriver({...newDriver, emergencyPhone: e.target.value})}
+                placeholder="Enter emergency contact phone"
+                value={driverData.emergency_contact.phone}
+                onChange={(e) => updateDriverData('emergency_contact.phone', e.target.value)}
               />
             </div>
+          </div>
+        )}
 
-            {/* Vehicle Details Section */}
-            <div className="section-header">
-              <h5>Vehicle Details</h5>
-            </div>
+        {/* Step 3: Vehicle Details */}
+        {currentStep === 3 && (
+          <div className="form-step">
+            <h4>Vehicle Details</h4>
             <div className="form-group">
               <label>Vehicle Type *</label>
               <div className="vehicle-type-options">
@@ -437,8 +342,8 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
                     type="radio"
                     name="vehicleType"
                     value="bike"
-                    checked={newDriver.vehicleType === 'bike'}
-                    onChange={(e) => setNewDriver({...newDriver, vehicleType: e.target.value})}
+                    checked={driverData.vehicle.type === 'bike'}
+                    onChange={(e) => updateDriverData('vehicle.type', e.target.value)}
                   />
                   <span>🏍️ Bike</span>
                 </label>
@@ -447,27 +352,36 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
                     type="radio"
                     name="vehicleType"
                     value="truck"
-                    checked={newDriver.vehicleType === 'truck'}
-                    onChange={(e) => setNewDriver({...newDriver, vehicleType: e.target.value})}
+                    checked={driverData.vehicle.type === 'truck'}
+                    onChange={(e) => updateDriverData('vehicle.type', e.target.value)}
                   />
                   <span>🚛 Truck</span>
                 </label>
               </div>
             </div>
             <div className="form-group">
-              <label>Vehicle Number *</label>
+              <label>Vehicle Model Name</label>
+              <input
+                type="text"
+                placeholder="Enter vehicle model name"
+                value={driverData.vehicle.model_name}
+                onChange={(e) => updateDriverData('vehicle.model_name', e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label>Vehicle Number</label>
               <input
                 type="text"
                 placeholder="Enter vehicle registration number"
-                value={newDriver.vehicleNumber}
-                onChange={(e) => setNewDriver({...newDriver, vehicleNumber: e.target.value})}
+                value={driverData.vehicle.number}
+                onChange={(e) => updateDriverData('vehicle.number', e.target.value)}
               />
             </div>
           </div>
         )}
 
-        {/* Step 3: Documents Upload */}
-        {currentStep === 3 && (
+        {/* Step 4: Documents Upload */}
+        {currentStep === 4 && (
           <div className="form-step">
             <h4>Documents Upload</h4>
             <div className="document-upload-grid">
@@ -476,45 +390,55 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
                 <input
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={(e) => handleFileUpload('aadharCard', e.target.files[0])}
+                  onChange={(e) => handleFileUpload('aadhar_url', e.target.files[0])}
                 />
-                {newDriver.aadharCard && <span className="file-name">✓ {newDriver.aadharCard.name}</span>}
+                {driverData.documents.aadhar_url && (
+                  <span className="file-name">✓ Document uploaded</span>
+                )}
               </div>
               <div className="document-item">
                 <label>PAN Card *</label>
                 <input
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={(e) => handleFileUpload('panCard', e.target.files[0])}
+                  onChange={(e) => handleFileUpload('pan_url', e.target.files[0])}
                 />
-                {newDriver.panCard && <span className="file-name">✓ {newDriver.panCard.name}</span>}
+                {driverData.documents.pan_url && (
+                  <span className="file-name">✓ Document uploaded</span>
+                )}
               </div>
               <div className="document-item">
                 <label>Driver License *</label>
                 <input
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={(e) => handleFileUpload('driverLicense', e.target.files[0])}
+                  onChange={(e) => handleFileUpload('driver_license_url', e.target.files[0])}
                 />
-                {newDriver.driverLicense && <span className="file-name">✓ {newDriver.driverLicense.name}</span>}
+                {driverData.documents.driver_license_url && (
+                  <span className="file-name">✓ Document uploaded</span>
+                )}
               </div>
               <div className="document-item">
-                <label>RC Vehicle *</label>
+                <label>RC Vehicle</label>
                 <input
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={(e) => handleFileUpload('rcVehicle', e.target.files[0])}
+                  onChange={(e) => handleFileUpload('rc_vehicle_url', e.target.files[0])}
                 />
-                {newDriver.rcVehicle && <span className="file-name">✓ {newDriver.rcVehicle.name}</span>}
+                {driverData.documents.rc_vehicle_url && (
+                  <span className="file-name">✓ Document uploaded</span>
+                )}
               </div>
               <div className="document-item">
-                <label>Insurance Vehicle *</label>
+                <label>Insurance Vehicle</label>
                 <input
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={(e) => handleFileUpload('insuranceVehicle', e.target.files[0])}
+                  onChange={(e) => handleFileUpload('insurance_vehicle_url', e.target.files[0])}
                 />
-                {newDriver.insuranceVehicle && <span className="file-name">✓ {newDriver.insuranceVehicle.name}</span>}
+                {driverData.documents.insurance_vehicle_url && (
+                  <span className="file-name">✓ Document uploaded</span>
+                )}
               </div>
             </div>
           </div>
@@ -523,17 +447,21 @@ const AddDriver = ({ onClose, onAddDriver, editMode = false, driverToEdit = null
         {/* Navigation Buttons */}
         <div className="form-navigation">
           {currentStep > 1 && (
-            <button className="nav-btn prev-btn" onClick={handlePrevious}>
+            <button className="nav-btn prev-btn" onClick={handlePrevious} disabled={isSubmitting}>
               Previous
             </button>
           )}
-          {currentStep < 3 ? (
-            <button className="nav-btn next-btn" onClick={handleNext}>
+          {currentStep < 4 ? (
+            <button className="nav-btn next-btn" onClick={handleNext} disabled={isSubmitting}>
               Next
             </button>
           ) : (
-            <button className="submit-btn" onClick={handleAddDriver}>
-              {editMode ? 'Update Driver' : 'Submit'}
+            <button 
+              className="submit-btn" 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : (editMode ? 'Update Driver' : 'Submit')}
             </button>
           )}
         </div>

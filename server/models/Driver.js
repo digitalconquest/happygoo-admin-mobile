@@ -11,29 +11,7 @@ const driverSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true
-  },
-  license: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  },
-  experience: {
-    type: String,
-    default: 'New Driver'
-  },
-  vehicleType: {
-    type: String,
-    enum: ['bike', 'truck'],
-    required: true
-  },
-  vehicleNumber: {
-    type: String,
-    required: true
+    required: false
   },
   dob: {
     type: String
@@ -42,48 +20,40 @@ const driverSchema = new mongoose.Schema({
     type: String,
     enum: ['male', 'female', 'other']
   },
-  emergencyName: {
-    type: String
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
   },
-  emergencyRelationship: {
-    type: String
+  experience_yrs: {
+    type: Number
   },
-  emergencyPhone: {
-    type: String
+  emergency_contact: {
+    name: String,
+    relationship: String,
+    phone: String
+  },
+  vehicle: {
+    type: {
+      type: String,
+      enum: ['bike', 'truck'],
+      required: true
+    },
+    model_name: String,
+    number: String
   },
   documents: {
-    aadharCard: {
-      name: String,
-      data: String,
-      type: String,
-      size: Number
-    },
-    panCard: {
-      name: String,
-      data: String,
-      type: String,
-      size: Number
-    },
-    driverLicense: {
-      name: String,
-      data: String,
-      type: String,
-      size: Number
-    },
-    rcVehicle: {
-      name: String,
-      data: String,
-      type: String,
-      size: Number
-    },
-    insuranceVehicle: {
-      name: String,
-      data: String,
-      type: String,
-      size: Number
-    }
+    aadhar_url: String,
+    pan_url: String,
+    driver_license_url: String,
+    rc_vehicle_url: String,
+    insurance_vehicle_url: String,
   },
-  createdAt: {
+  created_at: {
+    type: Date,
+    default: Date.now
+  },
+  updated_at: {
     type: Date,
     default: Date.now
   }

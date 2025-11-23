@@ -2,10 +2,35 @@ const express = require('express');
 const router = express.Router();
 const Driver = require('../models/Driver');
 
-// GET all drivers
+// GET all drivers with optional filtering
 router.get('/', async (req, res) => {
   try {
-    const drivers = await Driver.find().sort({ createdAt: -1 });
+    const { status, vehicleType, search } = req.query;
+    
+    // Build query object
+    const query = {};
+    
+    // Filter by status
+    if (status) {
+      query.status = status;
+    }
+    
+    // Filter by vehicle type
+    if (vehicleType) {
+      query['vehicle.type'] = vehicleType;
+    }
+    
+    // Search by name, phone, or email
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const drivers = await Driver.find(query).sort({ created_at: -1 });
+    
     res.json({
       success: true,
       count: drivers.length,
@@ -57,14 +82,29 @@ router.post('/', async (req, res) => {
     const driverData = req.body;
     
     // Generate email if not provided
-    if (!driverData.email) {
+    if (!driverData.email && driverData.name) {
       driverData.email = `${driverData.name.toLowerCase().replace(/\s+/g, '.')}@email.com`;
     }
     
-    // Generate license if not provided
-    if (!driverData.license) {
-      driverData.license = `DL-${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
+    // Ensure required fields are present
+    if (!driverData.name || !driverData.phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name and phone are required fields'
+      });
     }
+    
+    // Ensure vehicle type is provided (required field)
+    if (!driverData.vehicle || !driverData.vehicle.type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vehicle type is required'
+      });
+    }
+    
+    // Set timestamps
+    driverData.created_at = new Date();
+    driverData.updated_at = new Date();
     
     const driver = new Driver(driverData);
     const savedDriver = await driver.save();
@@ -93,6 +133,9 @@ router.put('/:id', async (req, res) => {
         message: 'Invalid driver ID format'
       });
     }
+    
+    // Update the updated_at timestamp
+    req.body.updated_at = new Date();
     
     const driver = await Driver.findByIdAndUpdate(
       req.params.id,

@@ -4,8 +4,6 @@ const cors = require('cors');
 
 // Import routes
 const driversRoutes = require('./routes/drivers');
-const vehiclesRoutes = require('./routes/vehicles');
-const profileRoutes = require('./routes/profile');
 
 const app = express();
 const PORT = 5000;
@@ -30,8 +28,6 @@ mongoose.connect(MONGODB_URI)
 
 // Routes
 app.use('/api/drivers', driversRoutes);
-app.use('/api/vehicles', vehiclesRoutes);
-app.use('/api/profile', profileRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

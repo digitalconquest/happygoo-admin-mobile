@@ -1,11 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Drivers from './components/Drivers';
-import Vehicles from './components/Vehicles';
 import Profile from './components/Profile';
 import './App.css';
 import './components/Drivers.css';
-import './components/Vehicles.css';
 import './components/Profile.css';
 import './components/AddDriver.css';
 import './components/DriverDetails.css';
@@ -24,10 +22,6 @@ function App() {
             <span className="nav-icon">👥</span>
             <span className="nav-label">Drivers</span>
           </Link>
-          <Link to="/vehicles" className="nav-item">
-            <span className="nav-icon">🚗</span>
-            <span className="nav-label">Vehicles</span>
-          </Link>
           <Link to="/profile" className="nav-item">
             <span className="nav-icon">👤</span>
             <span className="nav-label">Profile</span>
@@ -37,7 +31,6 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<Drivers />} />
-            <Route path="/vehicles" element={<Vehicles />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>

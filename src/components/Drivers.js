@@ -8,6 +8,8 @@ const Drivers = () => {
   const defaultDrivers = [];
 
   const [drivers, setDrivers] = useState([]);
+  const [filteredDrivers, setFilteredDrivers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showDriverDetails, setShowDriverDetails] = useState(false);
@@ -58,17 +60,20 @@ const Drivers = () => {
         if (mergedDrivers.length > 0) {
           console.log('Total drivers loaded:', mergedDrivers.length);
           setDrivers(mergedDrivers);
+          setFilteredDrivers(mergedDrivers);
           // Update the main drivers array with all drivers
           localStorage.setItem('drivers', JSON.stringify(mergedDrivers));
         } else {
           console.log('No drivers found, using defaults');
           setDrivers(defaultDrivers);
+          setFilteredDrivers(defaultDrivers);
           localStorage.setItem('drivers', JSON.stringify(defaultDrivers));
         }
       } catch (error) {
         console.error('Error loading drivers from localStorage:', error);
         console.log('Falling back to default drivers');
         setDrivers(defaultDrivers);
+        setFilteredDrivers(defaultDrivers);
         // Try to save defaults to localStorage
         try {
           localStorage.setItem('drivers', JSON.stringify(defaultDrivers));
@@ -81,6 +86,22 @@ const Drivers = () => {
     loadDrivers();
   }, []);
 
+  // Filter drivers based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredDrivers(drivers);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = drivers.filter(driver => 
+        driver.name?.toLowerCase().includes(query) ||
+        driver.phone?.toLowerCase().includes(query) ||
+        driver.email?.toLowerCase().includes(query) ||
+        driver.vehicle?.number?.toLowerCase().includes(query)
+      );
+      setFilteredDrivers(filtered);
+    }
+  }, [searchQuery, drivers]);
+
   const [showAddForm, setShowAddForm] = useState(false);
 
   const handleAddDriver = (driver) => {
@@ -92,6 +113,7 @@ const Drivers = () => {
     console.log('Updated drivers list:', updatedDrivers);
     
     setDrivers(updatedDrivers);
+    setFilteredDrivers(updatedDrivers);
     
     // Verify localStorage is already updated (should be done in AddDriver component)
     try {
@@ -154,6 +176,7 @@ const Drivers = () => {
     );
     
     setDrivers(updatedDrivers);
+    setFilteredDrivers(updatedDrivers);
     
     // Update localStorage
     try {
@@ -181,6 +204,7 @@ const Drivers = () => {
     console.log('Delete driver:', driverId);
     const updatedDrivers = drivers.filter(driver => driver.id !== driverId);
     setDrivers(updatedDrivers);
+    setFilteredDrivers(updatedDrivers);
     
     // Update localStorage
     try {
@@ -242,14 +266,20 @@ const Drivers = () => {
   return (
     <div className="drivers-container">
       <div className="page-container">
-        <h2 className="page-title">Drivers ({drivers.length})</h2>
-        
-        <div className="action-buttons">
+        <div className="drivers-top-bar">
+          <input
+            type="text"
+            className="search-bar"
+            placeholder="Search drivers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
           <button 
-            className="add-driver-btn"
-            onClick={() => setShowAddForm(!showAddForm)}
+            className="add-driver-icon-btn"
+            onClick={() => setShowAddForm(true)}
+            title="Add Driver"
           >
-            {showAddForm ? 'Cancel' : '+ Add Driver'}
+            ➕
           </button>
         </div>
 
@@ -275,38 +305,39 @@ const Drivers = () => {
           />
         )}
 
-        <div className="driver-list">
-          {drivers.length === 0 ? (
+        <div className="drivers-list">
+          {filteredDrivers.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">👥</div>
-              <p>No drivers found</p>
+              <div className="empty-icon">👥</div>
+              <p>{searchQuery ? 'No drivers found' : 'No drivers yet'}</p>
             </div>
           ) : (
-            drivers.map(driver => (
+            filteredDrivers.map(driver => (
               <div 
-                key={driver.id} 
+                key={driver.id || driver._id} 
                 className="driver-card"
                 onClick={() => handleDriverClick(driver)}
               >
-                <div className="driver-info">
-                  <div className="driver-avatar">
-                    {getInitials(driver.name)}
-                  </div>
-                  <div className="driver-details">
-                    <h3>{driver.name}</h3>
-                    <p>📧 {driver.email}</p>
-                    <p>📞 {driver.phone}</p>
-                    <p>🆔 License: {driver.license}</p>
-                    <p>⏰ Experience: {driver.experience}</p>
-                    <span className={`driver-status status-${driver.status}`}>
+                <div className="driver-avatar">
+                  {getInitials(driver.name || 'N/A')}
+                </div>
+                <div className="driver-content">
+                  <div className="driver-name-row">
+                    <h3>{driver.name || 'Unknown'}</h3>
+                    <span className={`status-badge status-${driver.status || 'pending'}`}>
                       {driver.status === 'pending' ? 'Pending' : 
                        driver.status === 'approved' ? 'Approved' : 
-                       driver.status === 'rejected' ? 'Rejected' : driver.status}
+                       driver.status === 'rejected' ? 'Rejected' : 'Pending'}
                     </span>
                   </div>
-                </div>
-                <div className="click-hint">
-                  👆 Click to view details
+                  {driver.phone && <p className="driver-info">📞 {driver.phone}</p>}
+                  {driver.email && <p className="driver-info">📧 {driver.email}</p>}
+                  {driver.vehicle?.type && (
+                    <p className="driver-info">
+                      {driver.vehicle.type === 'bike' ? '🏍️' : '🚛'} {driver.vehicle.type.charAt(0).toUpperCase() + driver.vehicle.type.slice(1)}
+                      {driver.vehicle?.number && ` - ${driver.vehicle.number}`}
+                    </p>
+                  )}
                 </div>
               </div>
             ))

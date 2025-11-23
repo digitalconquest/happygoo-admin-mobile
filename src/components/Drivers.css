@@ -1,3 +1,187 @@
+/* Drivers Container */
+.drivers-container {
+  width: 100%;
+  padding: 20px;
+}
+
+.page-container {
+  width: 100%;
+}
+
+/* Top Bar - Search and Add Button */
+.drivers-top-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-bar {
+  flex: 1;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar:focus {
+  border-color: #667eea;
+}
+
+.add-driver-icon-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #667eea;
+  color: white;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.add-driver-icon-btn:hover {
+  background: #5568d3;
+}
+
+.add-driver-icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* Success Message */
+.success-message {
+  background: #4caf50;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Drivers List */
+.drivers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Driver Card */
+.driver-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.driver-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-color: #667eea;
+}
+
+.driver-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.driver-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.driver-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.driver-name-row h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.status-pending {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-approved {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.driver-info {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+/* Form Styles (for AddDriver modal) */
 .add-driver-form {
   background: white;
   border-radius: 12px;
@@ -243,55 +427,6 @@
   box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
 }
 
-/* Action Buttons */
-.action-buttons {
-  margin-bottom: 20px;
-}
-
-.add-driver-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 15px 20px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  transition: all 0.3s ease;
-}
-
-.add-driver-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-
-.success-message {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: white;
-  padding: 16px 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  text-align: center;
-  font-weight: 600;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-  animation: slideInDown 0.3s ease-out;
-}
-
-@keyframes slideInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (max-width: 480px) {
   .form-row {
     flex-direction: column;
@@ -309,32 +444,4 @@
   .form-navigation {
     flex-direction: column;
   }
-  
-}
-
-/* Driver Status Styles */
-.driver-status {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 8px;
-}
-
-.status-pending {
-  background-color: #fff3e0;
-  color: #f57c00;
-}
-
-.status-approved {
-  background-color: #e8f5e8;
-  color: #2e7d32;
-}
-
-.status-rejected {
-  background-color: #ffebee;
-  color: #c62828;
 }
