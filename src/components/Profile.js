@@ -22,10 +22,10 @@ const Profile = () => {
     setIsEditing(false);
   };
 
-  // const handleCancel = () => {
-  //   setEditProfile(profile);
-  //   setIsEditing(false);
-  // };
+  const handleCancel = () => {
+    setEditProfile(profile);
+    setIsEditing(false);
+  };
 
   const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
